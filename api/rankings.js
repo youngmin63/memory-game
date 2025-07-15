@@ -15,22 +15,46 @@ module.exports = async (req, res) => {
       .insert([{ nickname, country, score }]);
     if (error) return res.status(500).json({ error: error.message });
     // 등록 후 상위 10명 반환
-    const { data: top10, error: getError } = await supabase
+    const { data: all, error: getError } = await supabase
       .from("rankings")
       .select("*")
-      .order("score", { ascending: false })
-      .limit(10);
+      .order("score", { ascending: false });
     if (getError) return res.status(500).json({ error: getError.message });
-    return res.status(200).json({ success: true, rankings: top10 });
+    // 닉네임별 최고 점수만 남기기
+    const bestByNickname = {};
+    for (const r of all) {
+      if (
+        !bestByNickname[r.nickname] ||
+        bestByNickname[r.nickname].score < r.score
+      ) {
+        bestByNickname[r.nickname] = r;
+      }
+    }
+    const uniqueRankings = Object.values(bestByNickname)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
+    return res.status(200).json({ success: true, rankings: uniqueRankings });
   }
   if (req.method === "GET") {
-    const { data, error } = await supabase
+    const { data: all, error } = await supabase
       .from("rankings")
       .select("*")
-      .order("score", { ascending: false })
-      .limit(10);
+      .order("score", { ascending: false });
     if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json(data);
+    // 닉네임별 최고 점수만 남기기
+    const bestByNickname = {};
+    for (const r of all) {
+      if (
+        !bestByNickname[r.nickname] ||
+        bestByNickname[r.nickname].score < r.score
+      ) {
+        bestByNickname[r.nickname] = r;
+      }
+    }
+    const uniqueRankings = Object.values(bestByNickname)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
+    return res.status(200).json(uniqueRankings);
   }
   res.status(405).json({ error: "Method not allowed" });
 };

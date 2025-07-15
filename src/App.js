@@ -28,6 +28,68 @@ function App() {
   const [user, setUser] = useState({ nickname: "", country: "" });
   const [userInput, setUserInput] = useState({ nickname: "", country: "" });
   const [ranking, setRanking] = useState([]);
+  // 언어 상태 추가
+  const [lang, setLang] = useState("ko"); // "ko" 또는 "en"
+
+  // 다국어 텍스트 매핑
+  const TEXT = {
+    ko: {
+      nickname: "닉네임",
+      selectCountry: "국적 선택",
+      startGame: "게임 시작",
+      round: "라운드",
+      score: "점수",
+      rankingBoard: "랭킹 보드",
+      country: "국적",
+      submit: "제출",
+      clear: "지우기",
+      correct: "정답! 다음 라운드로~",
+      wrong: "오답! 게임 오버!",
+      again: "다시 시작",
+      memorize: "숫자를 외우세요!",
+    },
+    en: {
+      nickname: "Nickname",
+      selectCountry: "Select Country",
+      startGame: "Start Game",
+      round: "Round",
+      score: "Score",
+      rankingBoard: "Ranking Board",
+      country: "Country",
+      submit: "Submit",
+      clear: "Clear",
+      correct: "Correct! Next round~",
+      wrong: "Wrong! Game Over!",
+      again: "Restart",
+      memorize: "Memorize the numbers!",
+    },
+  };
+
+  // 국가 코드 -> 국가명(한글/영어) 매핑
+  const COUNTRY_MAP = {
+    KR: { ko: "대한민국", en: "Korea" },
+    US: { ko: "미국", en: "USA" },
+    JP: { ko: "일본", en: "Japan" },
+    CN: { ko: "중국", en: "China" },
+    FR: { ko: "프랑스", en: "France" },
+    DE: { ko: "독일", en: "Germany" },
+    IT: { ko: "이탈리아", en: "Italy" },
+    GB: { ko: "영국", en: "UK" },
+    CA: { ko: "캐나다", en: "Canada" },
+    AU: { ko: "호주", en: "Australia" },
+    ES: { ko: "스페인", en: "Spain" },
+    NL: { ko: "네덜란드", en: "Netherlands" },
+    SE: { ko: "스웨덴", en: "Sweden" },
+    CH: { ko: "스위스", en: "Switzerland" },
+    BE: { ko: "벨기에", en: "Belgium" },
+    AT: { ko: "오스트리아", en: "Austria" },
+    DK: { ko: "덴마크", en: "Denmark" },
+    NO: { ko: "노르웨이", en: "Norway" },
+    FI: { ko: "핀란드", en: "Finland" },
+    NZ: { ko: "뉴질랜드", en: "New Zealand" },
+    IE: { ko: "아일랜드", en: "Ireland" },
+    ETC: { ko: "기타", en: "Other" },
+  };
 
   // 라운드별 난이도 조정
   const memorizeCount = Math.min(3 + round - 1, 8); // 암기 숫자 개수 (최대 8)
@@ -76,13 +138,18 @@ function App() {
     if (gameState === "show") {
       const timer = setTimeout(() => {
         // 입력 단계 진입 시 카드 생성
-        const extra = getRandomNumbers(
+        let extra = getRandomNumbers(
           choiceCount - memorizeCount,
           0,
           99,
           numbers
         );
-        setChoices(shuffle([...numbers, ...extra]));
+        let allChoices = [...numbers, ...extra];
+        // 부족하면 중복 허용해서 랜덤 숫자 추가
+        while (allChoices.length < choiceCount) {
+          allChoices.push(Math.floor(Math.random() * 100));
+        }
+        setChoices(shuffle(allChoices));
         setSelected([]);
         setGameState("input");
       }, memorizeTime);
@@ -139,25 +206,57 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <h1>숫자 Memory Rush</h1>
-        <p>
-          라운드: {round} / 점수: {score}
+        {/* 언어 선택 드롭다운 */}
+        <div style={{ width: "100%", textAlign: "right", marginBottom: 8 }}>
+          <select
+            value={lang}
+            onChange={(e) => setLang(e.target.value)}
+            style={{ padding: 6, borderRadius: 6, border: "1px solid #ccc" }}
+          >
+            <option value="ko">한국어</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+        <h1 style={{ fontSize: "2.1rem", marginBottom: 18 }}>
+          숫자 Memory Rush
+        </h1>
+        <p
+          style={{
+            fontSize: "1.15rem",
+            fontWeight: 900,
+            margin: "0 0 18px 0",
+            color: "#3b4cca",
+          }}
+        >
+          {TEXT[lang].round}:{" "}
+          <span style={{ fontSize: "1.2rem", color: "#e6b800" }}>{round}</span>{" "}
+          / {TEXT[lang].score}:{" "}
+          <span style={{ fontSize: "1.2rem", color: "#3b4cca" }}>{score}</span>
         </p>
         {/* 게임 시작 전 사용자 정보 입력 */}
         {gameState === "ready" && (
-          <div style={{ marginBottom: 24 }}>
+          <div
+            style={{
+              marginBottom: 24,
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
             <input
               type="text"
-              placeholder="닉네임"
+              placeholder={TEXT[lang].nickname}
               value={userInput.nickname}
               onChange={(e) =>
                 setUserInput((u) => ({ ...u, nickname: e.target.value }))
               }
               style={{
                 marginRight: 8,
-                padding: 8,
-                borderRadius: 6,
-                border: "1px solid #ccc",
+                padding: "12px 18px",
+                borderRadius: 10,
+                fontSize: "1.05rem",
+                minWidth: 100,
               }}
             />
             <select
@@ -167,20 +266,46 @@ function App() {
               }
               style={{
                 marginRight: 8,
-                padding: 8,
-                borderRadius: 6,
-                border: "1px solid #ccc",
+                padding: "12px 18px",
+                borderRadius: 10,
+                fontSize: "1.05rem",
+                minWidth: 100,
               }}
             >
-              <option value="">국적 선택</option>
-              <option value="KR">대한민국</option>
-              <option value="US">미국</option>
-              <option value="JP">일본</option>
-              <option value="CN">중국</option>
-              <option value="ETC">기타</option>
+              <option value="">{TEXT[lang].selectCountry}</option>
+              <option value="KR">{COUNTRY_MAP.KR[lang]}</option>
+              <option value="US">{COUNTRY_MAP.US[lang]}</option>
+              <option value="JP">{COUNTRY_MAP.JP[lang]}</option>
+              <option value="FR">{COUNTRY_MAP.FR[lang]}</option>
+              <option value="DE">{COUNTRY_MAP.DE[lang]}</option>
+              <option value="IT">{COUNTRY_MAP.IT[lang]}</option>
+              <option value="GB">{COUNTRY_MAP.GB[lang]}</option>
+              <option value="CA">{COUNTRY_MAP.CA[lang]}</option>
+              <option value="AU">{COUNTRY_MAP.AU[lang]}</option>
+              <option value="ES">{COUNTRY_MAP.ES[lang]}</option>
+              <option value="NL">{COUNTRY_MAP.NL[lang]}</option>
+              <option value="SE">{COUNTRY_MAP.SE[lang]}</option>
+              <option value="CH">{COUNTRY_MAP.CH[lang]}</option>
+              <option value="BE">{COUNTRY_MAP.BE[lang]}</option>
+              <option value="AT">{COUNTRY_MAP.AT[lang]}</option>
+              <option value="DK">{COUNTRY_MAP.DK[lang]}</option>
+              <option value="NO">{COUNTRY_MAP.NO[lang]}</option>
+              <option value="FI">{COUNTRY_MAP.FI[lang]}</option>
+              <option value="NZ">{COUNTRY_MAP.NZ[lang]}</option>
+              <option value="IE">{COUNTRY_MAP.IE[lang]}</option>
+              <option value="CN">{COUNTRY_MAP.CN[lang]}</option>
+              <option value="ETC">{COUNTRY_MAP.ETC[lang]}</option>
             </select>
-            <button onClick={startGame} disabled={!canStart}>
-              게임 시작
+            <button
+              onClick={startGame}
+              disabled={!canStart}
+              style={{
+                fontSize: "1.08rem",
+                padding: "12px 28px",
+                borderRadius: 10,
+              }}
+            >
+              {TEXT[lang].startGame}
             </button>
           </div>
         )}
@@ -191,27 +316,83 @@ function App() {
               style={{
                 margin: "18px 0 8px 0",
                 textAlign: "center",
-                fontWeight: 800,
+                fontWeight: 900,
+                fontSize: "1.15rem",
+                color: "#3b4cca",
+                letterSpacing: "-0.5px",
               }}
             >
-              랭킹 보드
+              {TEXT[lang].rankingBoard}
             </h3>
             <table>
               <thead>
                 <tr>
-                  <th>순위</th>
-                  <th>닉네임</th>
-                  <th>국적</th>
-                  <th>점수</th>
+                  <th style={{ fontSize: "1.08rem" }}>
+                    {lang === "ko" ? "순위" : "Rank"}
+                  </th>
+                  <th style={{ fontSize: "1.08rem" }}>
+                    {lang === "ko" ? "닉네임" : "Nickname"}
+                  </th>
+                  <th style={{ fontSize: "1.08rem" }}>{TEXT[lang].country}</th>
+                  <th style={{ fontSize: "1.08rem" }}>{TEXT[lang].score}</th>
                 </tr>
               </thead>
               <tbody>
                 {ranking.map((r, i) => (
-                  <tr key={i}>
-                    <td>{i + 1}</td>
-                    <td>{r.nickname}</td>
-                    <td>{r.country}</td>
-                    <td>{r.score}</td>
+                  <tr
+                    key={i}
+                    className={
+                      i === 0
+                        ? "rank-1"
+                        : i === 1
+                        ? "rank-2"
+                        : i === 2
+                        ? "rank-3"
+                        : undefined
+                    }
+                    style={{ height: 38 }}
+                  >
+                    <td style={{ fontSize: "1.15rem", fontWeight: 900 }}>
+                      {i === 0 ? (
+                        <span className="medal">🥇</span>
+                      ) : i === 1 ? (
+                        <span className="medal">🥈</span>
+                      ) : i === 2 ? (
+                        <span className="medal">🥉</span>
+                      ) : null}
+                      {i + 1}
+                    </td>
+                    <td style={{ fontSize: "1.08rem", fontWeight: 800 }}>
+                      {r.nickname}
+                    </td>
+                    <td style={{ fontSize: "1.05rem" }}>
+                      {r.country !== "ETC" && r.country ? (
+                        <img
+                          src={`https://flagcdn.com/24x18/${r.country.toLowerCase()}.png`}
+                          alt={COUNTRY_MAP[r.country]?.[lang] || r.country}
+                          style={{
+                            marginRight: 6,
+                            verticalAlign: "middle",
+                            borderRadius: 2,
+                            border: "1px solid #eee",
+                            width: 24,
+                            height: 18,
+                          }}
+                        />
+                      ) : null}
+                      <span
+                        style={{
+                          verticalAlign: "middle",
+                          fontSize: "1.05rem",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {COUNTRY_MAP[r.country]?.[lang] || r.country}
+                      </span>
+                    </td>
+                    <td style={{ fontSize: "1.08rem", fontWeight: 900 }}>
+                      {r.score}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -225,7 +406,7 @@ function App() {
               gap: "12px",
               justifyContent: "center",
               alignItems: "center",
-              margin: "24px 0",
+              margin: "18px 0",
             }}
           >
             {numbers.map((num, idx) => (
@@ -233,12 +414,10 @@ function App() {
                 key={idx}
                 className="card"
                 style={{
-                  minWidth: 60,
-                  minHeight: 80,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "2.2rem",
+                  minWidth: 48,
+                  minHeight: 56,
+                  fontSize: "1.3rem",
+                  padding: "18px 0",
                 }}
               >
                 {num}
@@ -246,13 +425,15 @@ function App() {
             ))}
             <p
               style={{
-                fontSize: "1rem",
+                fontSize: "1.15rem",
                 width: "100%",
                 textAlign: "center",
-                marginTop: 16,
+                marginTop: 12,
+                fontWeight: 900,
+                color: "#3b4cca",
               }}
             >
-              숫자를 외우세요!
+              {TEXT[lang].memorize}
             </p>
           </div>
         )}
@@ -269,7 +450,7 @@ function App() {
                 display: "flex",
                 gap: "8px",
                 flexWrap: "wrap",
-                marginBottom: "18px",
+                marginBottom: "12px",
                 justifyContent: "center",
               }}
             >
@@ -281,13 +462,14 @@ function App() {
                     selected.includes(num) || selected.length >= memorizeCount
                   }
                   style={{
-                    minWidth: 60,
-                    minHeight: 80,
-                    fontSize: "1.5rem",
+                    minWidth: 48,
+                    minHeight: 56,
+                    fontSize: "1.15rem",
                     opacity: selected.includes(num) ? 0.5 : 1,
                     border: selected.includes(num)
                       ? "2px solid #aee1f9"
                       : undefined,
+                    margin: 0,
                   }}
                 >
                   {num}
@@ -297,9 +479,9 @@ function App() {
             <div
               style={{
                 display: "flex",
-                gap: "10px",
+                gap: "8px",
                 flexWrap: "nowrap",
-                minHeight: 48,
+                minHeight: 32,
                 marginBottom: 8,
                 overflowX: "auto",
                 justifyContent: "center",
@@ -310,12 +492,12 @@ function App() {
                   key={idx}
                   className="card"
                   style={{
-                    minWidth: 40,
-                    minHeight: 48,
+                    minWidth: 36,
+                    minHeight: 40,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "1.3rem",
+                    fontSize: "1rem",
                     background: "#e0f7fa",
                   }}
                 >
@@ -324,8 +506,16 @@ function App() {
               ))}
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={handleClear} style={{ background: "#ffe0e0" }}>
-                지우기
+              <button
+                onClick={handleClear}
+                style={{
+                  background: "#ffe0e0",
+                  fontSize: "0.95rem",
+                  padding: "8px 18px",
+                  borderRadius: 8,
+                }}
+              >
+                {TEXT[lang].clear}
               </button>
               <button
                 onClick={checkAnswer}
@@ -337,15 +527,38 @@ function App() {
                     selected.length === memorizeCount
                       ? "pointer"
                       : "not-allowed",
+                  fontSize: "0.95rem",
+                  padding: "8px 18px",
+                  borderRadius: 8,
                 }}
               >
-                제출
+                {TEXT[lang].submit}
               </button>
             </div>
           </div>
         )}
-        {message && <div className="message">{message}</div>}
-        {gameState === "over" && <button onClick={startGame}>다시 시작</button>}
+        {message && (
+          <div className="message">
+            {message === "정답! 다음 라운드로~"
+              ? TEXT[lang].correct
+              : message === "오답! 게임 오버!"
+              ? TEXT[lang].wrong
+              : message}
+          </div>
+        )}
+        {gameState === "over" && (
+          <button
+            onClick={startGame}
+            style={{
+              fontSize: "1.08rem",
+              padding: "12px 28px",
+              borderRadius: 10,
+              marginTop: 18,
+            }}
+          >
+            {TEXT[lang].again}
+          </button>
+        )}
       </header>
     </div>
   );

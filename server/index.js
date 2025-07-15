@@ -27,8 +27,22 @@ function writeRankings(rankings) {
 
 // 랭킹 조회
 app.get("/api/rankings", (req, res) => {
-  const rankings = readRankings();
-  res.json(rankings);
+  let rankings = readRankings();
+  // 닉네임별 최고 점수만 남기기
+  const bestByNickname = {};
+  for (const r of rankings) {
+    if (
+      !bestByNickname[r.nickname] ||
+      bestByNickname[r.nickname].score < r.score
+    ) {
+      bestByNickname[r.nickname] = r;
+    }
+  }
+  // 점수 내림차순 정렬 후 상위 10개만 반환
+  const uniqueRankings = Object.values(bestByNickname)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);
+  res.json(uniqueRankings);
 });
 
 // 랭킹 등록
@@ -38,8 +52,37 @@ app.post("/api/rankings", (req, res) => {
     return res.status(400).json({ error: "닉네임, 국적, 점수 필수" });
   }
   let rankings = readRankings();
-  rankings.push({ nickname, country, score });
-  rankings = rankings.sort((a, b) => b.score - a.score).slice(0, 10); // 상위 10명만
+  // 기존에 같은 닉네임이 있으면 더 높은 점수만 남김
+  let updated = false;
+  rankings = rankings.filter((r) => {
+    if (r.nickname === nickname) {
+      if (r.score < score) {
+        // 기존 기록보다 높으면 기존 기록 제거
+        return false;
+      } else {
+        // 기존 기록이 더 높거나 같으면 새 기록 무시
+        updated = true;
+        return true;
+      }
+    }
+    return true;
+  });
+  if (!updated) {
+    rankings.push({ nickname, country, score });
+  }
+  // 닉네임별 최고 점수만 남기고, 점수 내림차순 상위 10개만 저장
+  const bestByNickname = {};
+  for (const r of rankings) {
+    if (
+      !bestByNickname[r.nickname] ||
+      bestByNickname[r.nickname].score < r.score
+    ) {
+      bestByNickname[r.nickname] = r;
+    }
+  }
+  rankings = Object.values(bestByNickname)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);
   writeRankings(rankings);
   res.json({ success: true, rankings });
 });

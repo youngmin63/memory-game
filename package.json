@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.7",
+    "@supabase/supabase-js": "^2.51.0",
     "cors": "^2.8.5",
     "cra-template-pwa": "2.0.0",
     "express": "^5.1.0",
