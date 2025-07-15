@@ -206,23 +206,36 @@ button:hover:not(:disabled) {
     max-width: 98vw;
   }
   .card {
-    min-width: 36px;
-    min-height: 40px;
-    font-size: 1rem;
-    padding: 8px 0;
+    min-width: 32px;
+    min-height: 36px;
+    font-size: 0.95rem;
+    padding: 6px 0;
   }
   input,
   select,
   button {
+    font-size: 0.9rem;
+    padding: 6px 8px;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .message {
     font-size: 0.95rem;
-    padding: 8px 12px;
+  }
+  /* flex row 입력폼이 한 줄에 다 안 들어갈 때 자동 줄바꿈 */
+  .App-header > div[style*="flex-direction: row"] {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  .App-header input,
+  .App-header select,
+  .App-header button {
+    margin-bottom: 6px;
   }
   .ranking-board th,
   .ranking-board td {
-    padding: 6px 2px;
-    font-size: 0.95rem;
-  }
-  .message {
-    font-size: 1rem;
+    padding: 4px 1px;
+    font-size: 0.9rem;
   }
 }
