@@ -40,7 +40,7 @@ function App() {
   // 서버에서 랭킹 불러오기
   const fetchRanking = async () => {
     try {
-      const res = await fetch("http://localhost:4000/api/rankings");
+      const res = await fetch("/api/rankings");
       const data = await res.json();
       setRanking(data);
     } catch (e) {
@@ -56,7 +56,7 @@ function App() {
   // 게임 오버 시 랭킹 등록 및 갱신
   useEffect(() => {
     if (gameState === "over" && user.nickname) {
-      fetch("http://localhost:4000/api/rankings", {
+      fetch("/api/rankings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
